@@ -84,8 +84,24 @@ stdenv.mkDerivation rec {
     runHook postInstall
   '';
 
+  doInstallCheck = true;
+
+  installCheckPhase = ''
+    runHook preInstallCheck
+
+    timeout 10 $out/bin/LegendsViewer &
+    sleep 5
+
+    # Static server is up
+    curl -f http://localhost:8081 | grep "<!doctype html>"
+
+    # Version matches expected
+    curl -f http://localhost:5054/api/version | grep ${version}
+
+    runHook postInstallCheck
+  '';
+
   passthru = {
-    tests.tests = callPackage ./tests.nix { };
     updateScript = nix-update-script { };
   };
 
